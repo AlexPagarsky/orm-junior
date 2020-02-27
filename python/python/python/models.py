@@ -1,10 +1,12 @@
 from entity import *
 
+
 class Section(Entity):
     _columns  = ['title']
     _parents  = []
     _children = {'categories': 'Category'}
     _siblings = {}
+
 
 class Category(Entity):
     _columns  = ['title']
@@ -12,11 +14,13 @@ class Category(Entity):
     _children = {'posts': 'Post'}
     _siblings = {}
 
+
 class Post(Entity):
     _columns  = ['content', 'title']
     _parents  = ['category']
     _children = {'comments': 'Comment'}
     _siblings = {'tags': 'Tag'}
+
 
 class Comment(Entity):
     _columns  = ['text']
@@ -24,11 +28,13 @@ class Comment(Entity):
     _children = {}
     _siblings = {}
 
+
 class Tag(Entity):
     _columns  = ['name']
     _parents  = []
     _children = {}
     _siblings = {'posts': 'Post'}
+
 
 class User(Entity):
     _columns  = ['name', 'email', 'age']
@@ -38,9 +44,19 @@ class User(Entity):
 
 
 if __name__ == "__main__":
-    section = Section()
-    section.title = "zalupa"
-    section.save()
 
-    for section in Section.all():
-        print section.title
+    # print(psycopg2.__version__)
+
+    section = Section(2)
+    # section.title = "zalupa"
+    # section.save()
+
+    print(section._columns)
+    print(section._fields)
+
+    # user = User()
+    # user.name = "zalupa pomen'she"
+    # print(user)
+
+    # for section in Section.all():
+    #     print(section.title)

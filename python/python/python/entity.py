@@ -1,13 +1,17 @@
 import psycopg2
 
+import psycopg2.extras
 
 class DatabaseError(Exception):
     pass
+
+
 class NotFoundError(Exception):
     pass
 
+
 class Entity(object):
-    db = None
+    db = psycopg2.connect("dbname=orm_base user=postgres password=postgres host=localhost")  # None
 
     # ORM part 1
     __delete_query    = 'DELETE FROM "{table}" WHERE {table}_id=%s'
@@ -34,24 +38,53 @@ class Entity(object):
         self.__modified = False
         self.__table    = self.__class__.__name__.lower()
 
+
+        ###############################
+        if id:
+            cur = self.__cursor
+            cur.execute(self.__select_query.format(table=self.__table), (id,))
+
+            res = cur.fetchone()
+            for field, value in zip(self._columns, res[1:]):
+                self.__fields[field] = value
+        else:
+            for field in self._columns:
+                self.__fields[field] = None
+
+        pass
+
     def __getattr__(self, name):
         # check, if instance is modified and throw an exception
+        # if self.__modified:  # TODO: Check if this supposed to work like this :/
+        #     raise DatabaseError()
+
         # get corresponding data from database if needed
+
         # check, if requested property name is in current class
         #    columns, parents, children or siblings and call corresponding
         #    getter with name as an argument
         # throw an exception, if attribute is unrecognized
+
+        # TODO: Rewrite
+
+
+
         pass
 
-    def __setattr__(self, name, value):
+    # def __setattr__(self, name, value):
         # check, if requested property name is in current class
         #    columns, parents, children or siblings and call corresponding
         #    setter with name and value as arguments or use default implementation
-        pass
+        # pass
 
     def __execute_query(self, query, args):
         # execute an sql statement and handle exceptions together with transactions
-        pass
+        self.__cursor.execute(query, args)
+
+        # TODO: Remove "Debug"
+        for i in self.__cursor:
+            print(i)
+        # pass
 
     def __insert(self):
         # generate an insert query string from fields keys and values and execute it
@@ -105,7 +138,7 @@ class Entity(object):
         # get ALL rows with ALL columns from corrensponding table
         # for each row create an instance of appropriate class
         # each instance must be filled with column data, a correct id and MUST NOT query a database for own fields any more
-        # return an array of istances
+        # return an array of instances
         pass
 
     def delete(self):
@@ -115,7 +148,7 @@ class Entity(object):
     @property
     def id(self):
         # try to guess yourself
-        pass
+        return self.__id
 
     @property
     def created(self):
