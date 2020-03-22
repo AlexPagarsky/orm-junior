@@ -48,15 +48,17 @@ if __name__ == "__main__":
     # print(psycopg2.__version__)
 
     section = Section(2)
+    # user = User(1)
     # section.title = "zalupa"
+    # print(user.__dict__)
+    # print(user.name, user.email)
     # section.save()
-
-    print(section._columns)
-    print(section._fields)
+    print(section.title, section.created, section.updated)
+    # print(section._fields)
 
     # user = User()
     # user.name = "zalupa pomen'she"
     # print(user)
 
     # for section in Section.all():
-    #     print(section.title)
+        # print(section.title)

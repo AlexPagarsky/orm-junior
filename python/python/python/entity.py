@@ -46,36 +46,34 @@ class Entity(object):
 
             res = cur.fetchone()
             for field, value in zip(self._columns, res[1:]):
+                print(field, '=', value)
                 self.__fields[field] = value
+            self.__fields['created'] = res[-2]
+            self.__fields['updated'] = res[-1]
         else:
             for field in self._columns:
                 self.__fields[field] = None
 
-        pass
-
     def __getattr__(self, name):
         # check, if instance is modified and throw an exception
-        # if self.__modified:  # TODO: Check if this supposed to work like this :/
-        #     raise DatabaseError()
-
         # get corresponding data from database if needed
-
         # check, if requested property name is in current class
         #    columns, parents, children or siblings and call corresponding
         #    getter with name as an argument
         # throw an exception, if attribute is unrecognized
+        if name in self.__fields:
+            return self.__fields[name]
+        else:
+            raise NotFoundError()
 
-        # TODO: Rewrite
-
-
-
-        pass
-
-    # def __setattr__(self, name, value):
+    def __setattr__(self, name, value):
         # check, if requested property name is in current class
         #    columns, parents, children or siblings and call corresponding
         #    setter with name and value as arguments or use default implementation
-        # pass
+        if name in self._columns:
+            self.__fields[name] = value
+        else:
+            object.__setattr__(self, name, value)
 
     def __execute_query(self, query, args):
         # execute an sql statement and handle exceptions together with transactions
@@ -153,12 +151,12 @@ class Entity(object):
     @property
     def created(self):
         # try to guess yourself
-        pass
+        return self.__fields['created']
 
     @property
     def updated(self):
         # try to guess yourself
-        pass
+        return self.__fields['updated']
 
     def save(self):
         # execute either insert or update query, depending on instance id
