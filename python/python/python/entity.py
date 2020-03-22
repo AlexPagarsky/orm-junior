@@ -38,16 +38,14 @@ class Entity(object):
         self.__modified = False
         self.__table    = self.__class__.__name__.lower()
 
-
-        ###############################
         if id:
             cur = self.__cursor
             cur.execute(self.__select_query.format(table=self.__table), (id,))
 
             res = cur.fetchone()
             for field, value in zip(self._columns, res[1:]):
-                print(field, '=', value)
                 self.__fields[field] = value
+
             self.__fields['created'] = res[-2]
             self.__fields['updated'] = res[-1]
         else:
@@ -61,10 +59,10 @@ class Entity(object):
         #    columns, parents, children or siblings and call corresponding
         #    getter with name as an argument
         # throw an exception, if attribute is unrecognized
-        if name in self.__fields:
-            return self.__fields[name]
-        else:
+        if self.__modified:
             raise NotFoundError()
+        else:
+            return self.__fields[name]
 
     def __setattr__(self, name, value):
         # check, if requested property name is in current class
