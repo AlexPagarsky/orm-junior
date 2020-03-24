@@ -49,11 +49,13 @@ if __name__ == "__main__":
 
     section = Section(2)
     # user = User(1)
+    print('first')
     # section.title = "zalupa"
     # print(user.__dict__)
     # print(user.name, user.email)
     # section.save()
     print(section.title, section.created, section.updated)
+    # print(section.noattr)
     # print(section._fields)
 
     # user = User()

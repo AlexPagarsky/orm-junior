@@ -38,19 +38,13 @@ class Entity(object):
         self.__modified = False
         self.__table    = self.__class__.__name__.lower()
 
-        if id:
-            cur = self.__cursor
-            cur.execute(self.__select_query.format(table=self.__table), (id,))
-
-            res = cur.fetchone()
-            for field, value in zip(self._columns, res[1:]):
-                self.__fields[field] = value
-
-            self.__fields['created'] = res[-2]
-            self.__fields['updated'] = res[-1]
-        else:
-            for field in self._columns:
-                self.__fields[field] = None
+        # if id:
+        #     self.__load()
+        # else:
+        for field in self._columns:
+            self.__fields[field] = None
+            self.__fields['created'] = None
+            self.__fields['updated'] = None
 
     def __getattr__(self, name):
         # check, if instance is modified and throw an exception
@@ -59,10 +53,19 @@ class Entity(object):
         #    columns, parents, children or siblings and call corresponding
         #    getter with name as an argument
         # throw an exception, if attribute is unrecognized
+        # TODO: DEBUG
+        print('getattr')
+
         if self.__modified:
-            raise NotFoundError()
+            raise DatabaseError()
         else:
-            return self.__fields[name]
+            if not self.__loaded:
+                self.__load()
+
+            if name in self.__fields:
+                return self.__fields[name]
+            else:
+                raise NotFoundError()
 
     def __setattr__(self, name, value):
         # check, if requested property name is in current class
@@ -70,27 +73,45 @@ class Entity(object):
         #    setter with name and value as arguments or use default implementation
         if name in self._columns:
             self.__fields[name] = value
+            self.__modified = True
         else:
             object.__setattr__(self, name, value)
 
     def __execute_query(self, query, args):
         # execute an sql statement and handle exceptions together with transactions
         self.__cursor.execute(query, args)
-
-        # TODO: Remove "Debug"
-        for i in self.__cursor:
-            print(i)
-        # pass
+        # TODO: handle exceptions
 
     def __insert(self):
         # generate an insert query string from fields keys and values and execute it
+        self.__execute_query(self.__insert_query.format(
+            table=self.__table,
+            columns=", ".join(self._columns),
+            placeholders=", ".join([self.__fields[i] for i in self._columns])
+            )
+        )
         # use prepared statements
         # save an insert id
+        # TODO: save an insert id
         pass
 
     def __load(self):
-        # if current instance is not loaded yet — execute select statement and store it's result as an associative array (fields), where column names used as keys
-        pass
+        # if current instance is not loaded yet — execute select statement
+        # and store it's result as an associative array (fields), where column names used as keys
+        # TODO: DEBUG
+        print('load')
+
+        if not self.__loaded:
+            self.__cursor.execute(self.__select_query.format(table=self.__table), (self.__id,))
+
+            res = self.__cursor.fetchone()
+            for field, value in zip(self._columns, res[1:]):
+                self.__fields[field] = value
+
+            self.__fields['created'] = res[-2]
+            self.__fields['updated'] = res[-1]
+
+            self.__loaded = True
 
     def __update(self):
         # generate an update query string from fields keys and values and execute it
