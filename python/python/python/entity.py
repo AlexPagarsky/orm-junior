@@ -1,6 +1,6 @@
 import psycopg2
-
 import psycopg2.extras
+
 
 class DatabaseError(Exception):
     pass
@@ -116,6 +116,11 @@ class Entity(object):
     def __update(self):
         # generate an update query string from fields keys and values and execute it
         # use prepared statements
+        s = self.__update_query.format(table=self.__table, columns=', '.join(k+'='+self.__fields[v] for k, v in self.columns))
+        # TODO: DEBUG
+        print(s)
+        self.__execute_query(s, args=(id,))
+
         pass
 
     def _get_children(self, name):
@@ -178,5 +183,9 @@ class Entity(object):
         return self.__fields['updated']
 
     def save(self):
-        # execute either insert or update query, depending on instance id
-        pass
+        if self.updated:
+            # TODO: Remove kostyl
+            self.__modified = False
+
+            self.__update()
+        # TODO: DEBUG
