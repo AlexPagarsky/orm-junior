@@ -39,13 +39,13 @@ class Entity(object):
         self.__modified = False
         self.__table    = self.__class__.__name__.lower()
 
-        # if id:
-        #     self.__load()
+        if id:
+            self.__load()
         # else:
-        for field in self._columns:
-            self.__fields[field] = None
-            self.__fields['created'] = None
-            self.__fields['updated'] = None
+        #     for field in self._columns:
+        #         self.__fields[field] = None
+        #         self.__fields['created'] = None
+        #         self.__fields['updated'] = None
 
     def __getattr__(self, name):
         # check, if instance is modified and throw an exception
@@ -85,21 +85,21 @@ class Entity(object):
     def __execute_query(self, query, args):
         # execute an sql statement and handle exceptions together with transactions
         self.__cursor.execute(query, args)
-
         # TODO: handle exceptions
 
     def __insert(self):
         # generate an insert query string from fields keys and values and execute it
+        # use prepared statements
+        # save an insert id
         self.__execute_query(self.__insert_query.format(
             table=self.__table,
             columns=", ".join(self._columns),
             placeholders=", ".join([self.__fields[i] for i in self._columns])
             )
         )
-        # use prepared statements
-        # save an insert id
-        # TODO: save an insert id
-        pass
+        self.__id = self.__cursor.fetchone()
+        # TODO: Remove debug
+        print(self.id)
 
     def __load(self):
         # if current instance is not loaded yet — execute select statement
@@ -116,26 +116,15 @@ class Entity(object):
 
             self.__fields['created'] = res[-2]
             self.__fields['updated'] = res[-1]
-
             self.__loaded = True
 
     def __update(self):
         # generate an update query string from fields keys and values and execute it
         # use prepared statements
-
-        # __update_query    = 'UPDATE "{table}" SET {columns} WHERE {table}_id=%s'
-
         query = self.__update_query.format(
             table=self.__table,
             columns=', '.join(self.__table + '_' + k + '=' + '%s' for k in self._columns)
         )
-        # query.format(
-        #     table=self.__table,
-        #     columns=self._columns
-        # )
-        # print(query.as_string(self.db))
-        print(query, 'test')
-        print(' '.join(self.__fields[x] for x in self._columns))
         self.__execute_query(query, (*(self.__fields[x] for x in self._columns), self.id))
 
     def _get_children(self, name):
@@ -198,9 +187,10 @@ class Entity(object):
         return self.__fields['updated']
 
     def save(self):
-        if self.updated:
+        if self.id:
             # TODO: Remove kostyl
             self.__modified = False
-
             self.__update()
-        # TODO: DEBUG
+        else:
+            self.__insert()
+            self.__loaded = True
