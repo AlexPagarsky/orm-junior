@@ -1,5 +1,6 @@
 import psycopg2
 import psycopg2.extras
+import psycopg2.sql
 
 
 class DatabaseError(Exception):
@@ -71,7 +72,11 @@ class Entity(object):
         # check, if requested property name is in current class
         #    columns, parents, children or siblings and call corresponding
         #    setter with name and value as arguments or use default implementation
+
         if name in self._columns:
+            # TODO: Remove debug
+            print(self.__fields[name], value)
+
             self.__fields[name] = value
             self.__modified = True
         else:
@@ -80,6 +85,7 @@ class Entity(object):
     def __execute_query(self, query, args):
         # execute an sql statement and handle exceptions together with transactions
         self.__cursor.execute(query, args)
+
         # TODO: handle exceptions
 
     def __insert(self):
@@ -116,12 +122,21 @@ class Entity(object):
     def __update(self):
         # generate an update query string from fields keys and values and execute it
         # use prepared statements
-        s = self.__update_query.format(table=self.__table, columns=', '.join(k+'='+self.__fields[v] for k, v in self.columns))
-        # TODO: DEBUG
-        print(s)
-        self.__execute_query(s, args=(id,))
 
-        pass
+        # __update_query    = 'UPDATE "{table}" SET {columns} WHERE {table}_id=%s'
+
+        query = self.__update_query.format(
+            table=self.__table,
+            columns=', '.join(self.__table + '_' + k + '=' + '%s' for k in self._columns)
+        )
+        # query.format(
+        #     table=self.__table,
+        #     columns=self._columns
+        # )
+        # print(query.as_string(self.db))
+        print(query, 'test')
+        print(' '.join(self.__fields[x] for x in self._columns))
+        self.__execute_query(query, (*(self.__fields[x] for x in self._columns), self.id))
 
     def _get_children(self, name):
         # return an array of child entity instances
