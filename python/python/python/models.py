@@ -1,5 +1,7 @@
 from entity import *
 
+import datetime # TODO: Remove
+
 
 class Section(Entity):
     _columns  = ['title']
@@ -57,9 +59,10 @@ if __name__ == "__main__":
     print(section.title, section.created, section.updated)
     # print(section.noattr)
     # print(section._fields)
-    section.title = 'zhopa_pomenbshe'
+    section.title = 'small_zhopa_' + str(datetime.datetime.now())
     section.save()
-    # print(section.title, section.created, section.updated)
+    sec = Section(2)
+    print(sec.title) #, section.created, section.updated)
     # user = User()
     # user.name = "zalupa pomen'she"
     # print(user)

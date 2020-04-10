@@ -79,6 +79,7 @@ class Entity(object):
     def __execute_query(self, query, args):
         # execute an sql statement and handle exceptions together with transactions
         self.__cursor.execute(query, args)
+        self.db.commit()
         # TODO: handle exceptions
 
     def __insert(self):
@@ -98,18 +99,15 @@ class Entity(object):
     def __load(self):
         # if current instance is not loaded yet — execute select statement
         # and store it's result as an associative array (fields), where column names used as keys
-        # TODO: DEBUG
-        print('load')
-
         if not self.__loaded:
             self.__cursor.execute(self.__select_query.format(table=self.__table), (self.__id,))
 
             res = self.__cursor.fetchone()
             for field, value in zip(self._columns, res[1:]):
-                self.__fields[f'{self.__table}_{field}'] = value
+                self._set_column(f'{self.__table}_{field}', value)
 
-            self.__fields[f'{self.__table}_created'] = res[-2]
-            self.__fields[f'{self.__table}_updated'] = res[-1]
+            self._set_column(f'{self.__table}_created', res[-2])
+            self._set_column(f'{self.__table}_updated', res[-1])
             self.__loaded = True
 
     def __update(self):
@@ -119,7 +117,7 @@ class Entity(object):
             table=self.__table,
             columns=', '.join(f'{self.__table}_{k}=%s' for k in self._columns)
         )
-        self.__execute_query(query, (*(self.__fields[f'{self.__table}_{x}'] for x in self._columns), self.id))
+        self.__execute_query(query, (*(self._get_column(f'{self.__table}_{name}') for name in self._columns), self.id))
 
     def _get_children(self, name):
         # return an array of child entity instances
@@ -145,7 +143,7 @@ class Entity(object):
 
     def _set_column(self, name, value):
         # put new value into fields array with <table>_<name> as a key
-        pass
+        self.__fields[f'{self.__table}_{name}'] = value
 
     def _set_parent(self, name, value):
         # ORM part 2
