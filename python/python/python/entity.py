@@ -39,10 +39,9 @@ class Entity(object):
         self.__modified = False
         self.__table    = self.__class__.__name__.lower()
 
-        if id:
-            self.__load()
+        # if id:
+        #     self.__load()
         # else:
-        #     for field in self._columns:
         #         self.__fields[field] = None
         #         self.__fields['created'] = None
         #         self.__fields['updated'] = None
@@ -60,8 +59,9 @@ class Entity(object):
             if not self.__loaded:
                 self.__load()
 
-            if self.__table + '_' + name in self.__fields:
-                return self.__fields[self.__table + '_' + name]
+            key = f'{self.__table}_{name}'
+            if key in self.__fields:
+                return self.__fields[key]
             else:
                 raise NotFoundError()
 
@@ -71,7 +71,7 @@ class Entity(object):
         #    setter with name and value as arguments or use default implementation
 
         if name in self._columns:
-            self.__fields[self.__table + '_' + name] = value
+            self.__fields[f'{self.__table}_{name}'] = value
             self.__modified = True
         else:
             object.__setattr__(self, name, value)
@@ -88,7 +88,7 @@ class Entity(object):
         self.__execute_query(self.__insert_query.format(
             table=self.__table,
             columns=", ".join(self._columns),
-            placeholders=", ".join([self.__fields[self.__table + '_' + i] for i in self._columns])
+            placeholders=", ".join([self.__fields[f'{self.__table}_{i}'] for i in self._columns])
             )
         )
         self.__id = self.__cursor.fetchone()
@@ -106,10 +106,10 @@ class Entity(object):
 
             res = self.__cursor.fetchone()
             for field, value in zip(self._columns, res[1:]):
-                self.__fields[self.__table + '_' + field] = value
+                self.__fields[f'{self.__table}_{field}'] = value
 
-            self.__fields[self.__table + '_created'] = res[-2]
-            self.__fields[self.__table + '_updated'] = res[-1]
+            self.__fields[f'{self.__table}_created'] = res[-2]
+            self.__fields[f'{self.__table}_updated'] = res[-1]
             self.__loaded = True
 
     def __update(self):
@@ -117,9 +117,9 @@ class Entity(object):
         # use prepared statements
         query = self.__update_query.format(
             table=self.__table,
-            columns=', '.join(self.__table + '_' + k + '=' + '%s' for k in self._columns)
+            columns=', '.join(f'{self.__table}_{k}=%s' for k in self._columns)
         )
-        self.__execute_query(query, (*(self.__fields[self.__table + '_' + x] for x in self._columns), self.id))
+        self.__execute_query(query, (*(self.__fields[f'{self.__table}_{x}'] for x in self._columns), self.id))
 
     def _get_children(self, name):
         # return an array of child entity instances
@@ -128,7 +128,7 @@ class Entity(object):
 
     def _get_column(self, name):
         # return value from fields array by <table>_<name> as a key
-        return self.__fields[self.__table + '_' + name]
+        return self.__fields[f'{self._table}_{name}']
 
     def _get_parent(self, name):
         # ORM part 2
@@ -173,12 +173,12 @@ class Entity(object):
     @property
     def created(self):
         # try to guess yourself
-        return self.__fields[self.__table + '_created']
+        return self.__fields[f'{self.__table}_created']
 
     @property
     def updated(self):
         # try to guess yourself
-        return self.__fields[self.__table + '_updated']
+        return self.__fields[f'{self.__table}_updated']
 
     def save(self):
         if self.id:
