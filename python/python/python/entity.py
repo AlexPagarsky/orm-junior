@@ -54,17 +54,14 @@ class Entity(object):
         #    columns, parents, children or siblings and call corresponding
         #    getter with name as an argument
         # throw an exception, if attribute is unrecognized
-        # TODO: DEBUG
-        print('getattr')
-
         if self.__modified:
             raise DatabaseError()
         else:
             if not self.__loaded:
                 self.__load()
 
-            if name in self.__fields:
-                return self.__fields[name]
+            if self.__table + '_' + name in self.__fields:
+                return self.__fields[self.__table + '_' + name]
             else:
                 raise NotFoundError()
 
@@ -74,10 +71,7 @@ class Entity(object):
         #    setter with name and value as arguments or use default implementation
 
         if name in self._columns:
-            # TODO: Remove debug
-            print(self.__fields[name], value)
-
-            self.__fields[name] = value
+            self.__fields[self.__table + '_' + name] = value
             self.__modified = True
         else:
             object.__setattr__(self, name, value)
@@ -94,7 +88,7 @@ class Entity(object):
         self.__execute_query(self.__insert_query.format(
             table=self.__table,
             columns=", ".join(self._columns),
-            placeholders=", ".join([self.__fields[i] for i in self._columns])
+            placeholders=", ".join([self.__fields[self.__table + '_' + i] for i in self._columns])
             )
         )
         self.__id = self.__cursor.fetchone()
@@ -112,10 +106,10 @@ class Entity(object):
 
             res = self.__cursor.fetchone()
             for field, value in zip(self._columns, res[1:]):
-                self.__fields[field] = value
+                self.__fields[self.__table + '_' + field] = value
 
-            self.__fields['created'] = res[-2]
-            self.__fields['updated'] = res[-1]
+            self.__fields[self.__table + '_created'] = res[-2]
+            self.__fields[self.__table + '_updated'] = res[-1]
             self.__loaded = True
 
     def __update(self):
@@ -125,7 +119,7 @@ class Entity(object):
             table=self.__table,
             columns=', '.join(self.__table + '_' + k + '=' + '%s' for k in self._columns)
         )
-        self.__execute_query(query, (*(self.__fields[x] for x in self._columns), self.id))
+        self.__execute_query(query, (*(self.__fields[self.__table + '_' + x] for x in self._columns), self.id))
 
     def _get_children(self, name):
         # return an array of child entity instances
@@ -134,7 +128,7 @@ class Entity(object):
 
     def _get_column(self, name):
         # return value from fields array by <table>_<name> as a key
-        pass
+        return self.__fields[self.__table + '_' + name]
 
     def _get_parent(self, name):
         # ORM part 2
@@ -179,18 +173,18 @@ class Entity(object):
     @property
     def created(self):
         # try to guess yourself
-        return self.__fields['created']
+        return self.__fields[self.__table + '_created']
 
     @property
     def updated(self):
         # try to guess yourself
-        return self.__fields['updated']
+        return self.__fields[self.__table + '_updated']
 
     def save(self):
         if self.id:
-            # TODO: Remove kostyl
-            self.__modified = False
             self.__update()
+            self.__modified = False
         else:
             self.__insert()
+            # TODO: maybe rework
             self.__loaded = True

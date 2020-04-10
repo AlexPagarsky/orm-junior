@@ -59,7 +59,7 @@ if __name__ == "__main__":
     # print(section._fields)
     section.title = 'zhopa_pomenbshe'
     section.save()
-    print(section.title, section.created, section.updated)
+    # print(section.title, section.created, section.updated)
     # user = User()
     # user.name = "zalupa pomen'she"
     # print(user)
