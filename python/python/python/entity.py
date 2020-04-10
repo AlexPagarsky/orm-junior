@@ -71,7 +71,7 @@ class Entity(object):
         #    setter with name and value as arguments or use default implementation
 
         if name in self._columns:
-            self.__fields[f'{self.__table}_{name}'] = value
+            self._set_column(f'{self.__table}_{name}', value)
             self.__modified = True
         else:
             object.__setattr__(self, name, value)
@@ -86,10 +86,11 @@ class Entity(object):
         # generate an insert query string from fields keys and values and execute it
         # use prepared statements
         # save an insert id
-        self.__execute_query(self.__insert_query.format(
-            table=self.__table,
-            columns=", ".join(self._columns),
-            placeholders=", ".join([self.__fields[f'{self.__table}_{i}'] for i in self._columns])
+        self.__execute_query(
+            self.__insert_query.format(
+                table=self.__table,
+                columns=", ".join(self._columns),
+                placeholders=", ".join([self._get_column(i) for i in self._columns])
             )
         )
         self.__id = self.__cursor.fetchone()
@@ -104,10 +105,10 @@ class Entity(object):
 
             res = self.__cursor.fetchone()
             for field, value in zip(self._columns, res[1:]):
-                self._set_column(f'{self.__table}_{field}', value)
+                self._set_column(field, value)
 
-            self._set_column(f'{self.__table}_created', res[-2])
-            self._set_column(f'{self.__table}_updated', res[-1])
+            self._set_column('created', res[-2])
+            self._set_column('updated', res[-1])
             self.__loaded = True
 
     def __update(self):
@@ -117,7 +118,7 @@ class Entity(object):
             table=self.__table,
             columns=', '.join(f'{self.__table}_{k}=%s' for k in self._columns)
         )
-        self.__execute_query(query, (*(self._get_column(f'{self.__table}_{name}') for name in self._columns), self.id))
+        self.__execute_query(query, (*(self._get_column(name) for name in self._columns), self.id))
 
     def _get_children(self, name):
         # return an array of child entity instances
@@ -126,7 +127,7 @@ class Entity(object):
 
     def _get_column(self, name):
         # return value from fields array by <table>_<name> as a key
-        return self.__fields[f'{self._table}_{name}']
+        return self.__fields[f'{self.__table}_{name}']
 
     def _get_parent(self, name):
         # ORM part 2
