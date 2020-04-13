@@ -39,13 +39,6 @@ class Entity(object):
         self.__modified = False
         self.__table    = self.__class__.__name__.lower()
 
-        # if id:
-        #     self.__load()
-        # else:
-        #         self.__fields[field] = None
-        #         self.__fields['created'] = None
-        #         self.__fields['updated'] = None
-
     def __getattr__(self, name):
         # check, if instance is modified and throw an exception
         # get corresponding data from database if needed
@@ -94,8 +87,6 @@ class Entity(object):
             )
         )
         self.__id = self.__cursor.fetchone()
-        # TODO: Remove debug
-        print(self.id)
 
     def __load(self):
         # if current instance is not loaded yet — execute select statement
@@ -162,7 +153,8 @@ class Entity(object):
 
     def delete(self):
         # execute delete query with appropriate id
-        pass
+        query = self.__delete_query.format(table=self.__table)
+        self.__execute_query(query, (self.id, ))
 
     @property
     def id(self):
