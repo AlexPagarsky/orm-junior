@@ -70,6 +70,8 @@ class Entity(object):
             object.__setattr__(self, name, value)
 
     def __execute_query(self, query, args):
+        # TODO: Remove debug
+        print(f'execute query, {query}, {args}')
         # execute an sql statement and handle exceptions together with transactions
         self.__cursor.execute(query, args)
         self.db.commit()
@@ -96,9 +98,13 @@ class Entity(object):
 
             res = self.__cursor.fetchone()
             for field, value in zip(self._columns, res[1:]):
+                # TODO: Remove debug
+                print(field, value, 'load in cycle')
                 self._set_column(field, value)
 
             self._set_column('created', res[-2])
+            # TODO: Remove debug
+            print('created/updated load after cycle')
             self._set_column('updated', res[-1])
             self.__loaded = True
 
@@ -149,10 +155,25 @@ class Entity(object):
         # for each row create an instance of appropriate class
         # each instance must be filled with column data, a correct id and MUST NOT query a database for own fields any more
         # return an array of instances
-        pass
+        # __list_query      = 'SELECT * FROM "{table}"'
+        out = []
+        temp = cls()
+        query = temp.__list_query
+        print(query, temp.__table)
+        temp.__execute_query(query.format(table=temp.__table), (None, ))
+        for fields in temp.__cursor.fetchall():
+            instance = cls(id=fields[0])
+            columns = temp._columns + ['created', 'updated']
+            for name, value in zip(columns, fields[1:]):
+                instance._set_column(name, value)
+
+            out.append(instance)
+
+        return out
 
     def delete(self):
         # execute delete query with appropriate id
+        # TODO: Do some polishing a.k.a rework
         query = self.__delete_query.format(table=self.__table)
         self.__execute_query(query, (self.id, ))
 

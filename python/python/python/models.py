@@ -48,21 +48,24 @@ class User(Entity):
 if __name__ == "__main__":
 
     # print(psycopg2.__version__)
+    all = Section.all()
+    for i in all:
+        print(i._columns, i.title)
 
-    section = Section(2)
+    # section = Section(2)
     # user = User(1)
-    print('first')
+    # print('first')
     # section.title = "zalupa"
     # print(user.__dict__)
     # print(user.name, user.email)
     # section.save()
-    print(section.title, section.created, section.updated)
+    # print(section.title, section.created, section.updated)
     # print(section.noattr)
     # print(section._fields)
-    section.title = 'small_zhopa_' + str(datetime.datetime.now())
-    section.save()
-    sec = Section(2)
-    print(sec.title) #, section.created, section.updated)
+    # section.title = 'small_zhopa_' + str(datetime.datetime.now())
+    # section.save()
+    # sec = Section(2)
+    # print(sec.title) #, section.created, section.updated)
     # user = User()
     # user.name = "zalupa pomen'she"
     # print(user)
