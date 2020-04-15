@@ -50,7 +50,16 @@ if __name__ == "__main__":
     # print(psycopg2.__version__)
     all = Section.all()
     for i in all:
-        print(i._columns, i.title)
+        print(i._columns, i.id, i.title, i.created, i.updated)
+
+
+    # section = Section(2)
+    # print(section.title)
+    # section.delete()
+    # print('1')
+    # section = Section()
+    #
+    # section.delete()
 
     # section = Section(2)
     # user = User(1)

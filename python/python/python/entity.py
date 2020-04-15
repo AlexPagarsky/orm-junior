@@ -99,12 +99,12 @@ class Entity(object):
             res = self.__cursor.fetchone()
             for field, value in zip(self._columns, res[1:]):
                 # TODO: Remove debug
-                print(field, value, 'load in cycle')
+                # print(field, value, 'load in cycle')
                 self._set_column(field, value)
 
             self._set_column('created', res[-2])
             # TODO: Remove debug
-            print('created/updated load after cycle')
+            # print('created/updated load after cycle')
             self._set_column('updated', res[-1])
             self.__loaded = True
 
@@ -159,7 +159,7 @@ class Entity(object):
         out = []
         temp = cls()
         query = temp.__list_query
-        print(query, temp.__table)
+        # print(query, temp.__table)
         temp.__execute_query(query.format(table=temp.__table), (None, ))
         for fields in temp.__cursor.fetchall():
             instance = cls(id=fields[0])
